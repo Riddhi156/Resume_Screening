@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Screening</title>
+    <meta name="description" content="AI-powered resume screening system that predicts hiring outcomes based on candidate profiles.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <!-- Animated background orbs -->
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <div class="container">
+
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <rect width="36" height="36" rx="10" fill="url(#logo-grad)"/>
+                    <path d="M10 12h16M10 18h12M10 24h8" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="26" cy="24" r="4" stroke="white" stroke-width="2"/>
+                    <path d="M29 27l3 3" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="logo-grad" x1="0" y1="0" x2="36" y2="36">
+                            <stop stop-color="#6366f1"/>
+                            <stop offset="1" stop-color="#8b5cf6"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <h1>Resume Screener</h1>
+            <p class="subtitle">AI-powered candidate evaluation — fill in the details below</p>
+        </div>
+
+        <!-- Resume Scanner Section -->
+        <div class="scanner-section" id="scanner-section">
+            <div class="scanner-toggle" id="scanner-toggle">
+                <div class="scanner-toggle-left">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <line x1="3" y1="9" x2="21" y2="9"/>
+                        <line x1="9" y1="3" x2="9" y2="21"/>
+                    </svg>
+                    <span>Scan Resume</span>
+                </div>
+                <span class="scanner-badge">OCR</span>
+            </div>
+            <div class="scanner-body" id="scanner-body">
+                <div class="drop-zone" id="drop-zone">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="17 8 12 3 7 8"/>
+                        <line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <p class="drop-text">Drag & drop your resume here</p>
+                    <p class="drop-hint">or click to browse — supports JPG, PNG, PDF</p>
+                    <input type="file" id="resume-file" accept=".jpg,.jpeg,.png,.pdf" hidden>
+                </div>
+                <div class="scanner-status" id="scanner-status" hidden>
+                    <div class="scanner-spinner"></div>
+                    <span id="scanner-status-text">Scanning resume...</span>
+                </div>
+                <div class="scanner-result" id="scanner-result" hidden>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>
+                    <span id="scanner-result-text">Fields auto-filled from resume!</span>
+                </div>
+                <div class="scanner-error" id="scanner-error" hidden>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    <span id="scanner-error-text">Error scanning resume</span>
+                </div>
+            </div>
+        </div>
+
+        <form action="/predict" method="post" id="screening-form">
+
+            <!-- Section: Personal -->
+            <div class="form-section">
+                <div class="section-label">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+                    Personal
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label for="age">Age</label>
+                        <input type="number" id="age" name="age" placeholder="e.g. 24"
+                               value="{{ form_data.age if form_data else '' }}" required>
+                    </div>
+                    <div class="field">
+                        <label for="cgpa">CGPA</label>
+                        <input type="number" id="cgpa" step="0.1" name="cgpa" placeholder="e.g. 8.5"
+                               value="{{ form_data.cgpa if form_data else '' }}" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Education -->
+            <div class="form-section">
+                <div class="section-label">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
+                    Education
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label for="education_level">Degree</label>
+                        <select id="education_level" name="education_level">
+                            <option value="Bachelors" {{ 'selected' if form_data and form_data.education_level == 'Bachelors' }}>Bachelors</option>
+                            <option value="Masters" {{ 'selected' if form_data and form_data.education_level == 'Masters' }}>Masters</option>
+                            <option value="PhD" {{ 'selected' if form_data and form_data.education_level == 'PhD' }}>PhD</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="university_tier">University Tier</label>
+                        <select id="university_tier" name="university_tier">
+                            <option value="Tier 1" {{ 'selected' if form_data and form_data.university_tier == 'Tier 1' }}>Tier 1</option>
+                            <option value="Tier 2" {{ 'selected' if form_data and form_data.university_tier == 'Tier 2' }}>Tier 2</option>
+                            <option value="Tier 3" {{ 'selected' if form_data and form_data.university_tier == 'Tier 3' }}>Tier 3</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Experience -->
+            <div class="form-section">
+                <div class="section-label">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+                    Experience
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label for="internships">Internships</label>
+                        <input type="number" id="internships" name="internships" placeholder="0"
+                               value="{{ form_data.internships if form_data else '' }}" required>
+                    </div>
+                    <div class="field">
+                        <label for="experience_years">Years of Exp.</label>
+                        <input type="number" id="experience_years" name="experience_years"
+                               step="0.1" placeholder="e.g. 2.5"
+                               value="{{ form_data.experience_years if form_data else '' }}" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field full-width">
+                        <label for="projects_text">Projects</label>
+                        <textarea id="projects_text" name="projects_text"
+                                  placeholder="e.g. E-commerce Website, Chat App, ML Pipeline"
+                                  rows="2" required>{{ form_data.projects_text if form_data else '' }}</textarea>
+                        <span class="hint">Type project names separated by commas — we'll count them</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field full-width">
+                        <label for="hackathons_text">Hackathons</label>
+                        <textarea id="hackathons_text" name="hackathons_text"
+                                  placeholder="e.g. HackMIT 2025, Google Code Jam, MLH Fellowship"
+                                  rows="2" required>{{ form_data.hackathons_text if form_data else '' }}</textarea>
+                        <span class="hint">Type hackathon names separated by commas — we'll count them</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Skills & Achievements (TEXT INPUTS) -->
+            <div class="form-section">
+                <div class="section-label">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    Skills & Achievements
+                </div>
+                <div class="row">
+                    <div class="field full-width">
+                        <label for="programming_languages_text">Programming Languages</label>
+                        <textarea id="programming_languages_text" name="programming_languages_text"
+                                  placeholder="e.g. Python, Java, C++, JavaScript"
+                                  rows="2" required>{{ form_data.programming_languages_text if form_data else '' }}</textarea>
+                        <span class="hint">Type languages separated by commas — we'll count them</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field full-width">
+                        <label for="certifications_text">Certifications</label>
+                        <textarea id="certifications_text" name="certifications_text"
+                                  placeholder="e.g. AWS Solutions Architect, Google Data Analytics, PMP"
+                                  rows="2" required>{{ form_data.certifications_text if form_data else '' }}</textarea>
+                        <span class="hint">Type certifications separated by commas — we'll count them</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label for="research_papers">Research Papers</label>
+                        <input type="number" id="research_papers" name="research_papers" placeholder="0"
+                               value="{{ form_data.research_papers if form_data else '' }}" required>
+                    </div>
+                    <div class="field">
+                        <label for="skills_score">Skills Score (0–30)</label>
+                        <input type="number" id="skills_score" name="skills_score" placeholder="e.g. 20"
+                               value="{{ form_data.skills_score if form_data else '' }}" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section: Resume & Target -->
+            <div class="form-section">
+                <div class="section-label">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Resume & Target
+                </div>
+                <div class="row">
+                    <div class="field full-width">
+                        <label for="soft_skills_text">Soft Skills</label>
+                        <textarea id="soft_skills_text" name="soft_skills_text"
+                                  placeholder="e.g. Communication, Leadership, Teamwork, Problem Solving"
+                                  rows="2" required>{{ form_data.soft_skills_text if form_data else '' }}</textarea>
+                        <span class="hint">Type soft skills separated by commas — we'll count them</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="field">
+                        <label for="soft_skills_score">Soft Skills Score (0–10)</label>
+                        <input type="number" id="soft_skills_score" name="soft_skills_score"
+                               step="0.1" placeholder="auto-calculated or enter manually"
+                               value="{{ form_data.soft_skills_score if form_data else '' }}">
+                    </div>
+                    <div class="field">
+                        <label for="resume_length_words">Resume Length (words)</label>
+                        <input type="number" id="resume_length_words" name="resume_length_words"
+                               placeholder="e.g. 500"
+                               value="{{ form_data.resume_length_words if form_data else '' }}" required>
+                    </div>
+                </div>
+                <div class="row single">
+                    <div class="field">
+                        <label for="company_type">Target Company</label>
+                        <select id="company_type" name="company_type">
+                            <option value="Startup" {{ 'selected' if form_data and form_data.company_type == 'Startup' }}>Startup</option>
+                            <option value="Mid-size" {{ 'selected' if form_data and form_data.company_type == 'Mid-size' }}>Mid-size Company</option>
+                            <option value="MNC" {{ 'selected' if form_data and form_data.company_type == 'MNC' }}>MNC</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validation Error Banner -->
+            <div class="validation-error" id="validation-error" hidden>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span id="validation-error-text">Please fill in all required fields.</span>
+            </div>
+
+            <button type="submit" id="predict-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                Predict Hiring Outcome
+            </button>
+
+        </form>
+
+        {% if prediction_text %}
+        <div class="result result-{{ result_status }}" id="result-box" style="border-color: {{ cri_color }}40; background: {{ cri_color }}0d;">
+            <div class="result-icon">
+                {% if result_status == 'hired' %}
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="{{ cri_color }}" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>
+                {% elif result_status == 'uncertain' %}
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="{{ cri_color }}" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                {% else %}
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="{{ cri_color }}" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                {% endif %}
+            </div>
+            <p class="result-text" style="color: {{ cri_color }};">{{ prediction_text }}</p>
+            {% if result_tip %}
+            <p class="result-tip" style="color: {{ cri_color }}cc;">{{ result_tip }}</p>
+            {% endif %}
+            {% if confidence %}
+            <p class="result-confidence">Model Confidence: <strong>{{ confidence }}%</strong></p>
+            {% endif %}
+        </div>
+
+        <!-- CRI Score Card -->
+        {% if cri_score is not none %}
+        <div class="cri-card" id="cri-card" style="border-color: {{ cri_color }}30;">
+            <div class="cri-header">
+                <div class="cri-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ cri_color }}" stroke-width="2" stroke-linecap="round"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+                    Candidate Readiness Index
+                </div>
+                <span class="cri-badge cri-{{ cri_label|lower|replace(' ', '-') }}">{{ cri_label }}</span>
+            </div>
+            <div class="cri-score-row">
+                <div class="cri-ring">
+                    <svg viewBox="0 0 120 120" class="cri-ring-svg">
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="#e5e7eb" stroke-width="10"/>
+                        <circle cx="60" cy="60" r="52" fill="none"
+                                stroke-width="10"
+                                stroke-linecap="round"
+                                transform="rotate(-90 60 60)"
+                                class="cri-progress"
+                                data-stroke="{{ cri_color }}"
+                                data-dash="{{ (cri_score / 100) * 326.73 }}"/>
+                    </svg>
+                    <span class="cri-number" style="color: {{ cri_color }};">{{ cri_score }}</span>
+                </div>
+                <div class="cri-details">
+                    <p>Your overall readiness score based on education, skills, experience, and achievements.</p>
+                    <div class="cri-bar-group">
+                        <div class="cri-bar-label">Score</div>
+                        <div class="cri-bar-track">
+                            <div class="cri-bar-fill" data-width="{{ cri_score }}" data-color="{{ cri_color }}"></div>
+                        </div>
+                        <span class="cri-bar-value">{{ cri_score }}/100</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+
+        <footer>
+            <p>Powered by XGBoost ML &bull; Built with Flask</p>
+        </footer>
+
+    </div>
+
+    <script>
+        // Animate form sections on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('.form-section');
+            sections.forEach((s, i) => {
+                s.style.animationDelay = `${i * 0.08}s`;
+            });
+
+            // Scroll to result if present
+            const result = document.getElementById('result-box');
+            if (result) {
+                result.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            // ===== Form Validation =====
+            const form = document.getElementById('screening-form');
+            const validationError = document.getElementById('validation-error');
+            const validationErrorText = document.getElementById('validation-error-text');
+
+            // Field labels for nice error messages
+            const fieldLabels = {
+                age: 'Age',
+                cgpa: 'CGPA',
+                internships: 'Internships',
+                experience_years: 'Years of Experience',
+                projects_text: 'Projects',
+                hackathons_text: 'Hackathons',
+                programming_languages_text: 'Programming Languages',
+                certifications_text: 'Certifications',
+                research_papers: 'Research Papers',
+                skills_score: 'Skills Score',
+                soft_skills_text: 'Soft Skills',
+                resume_length_words: 'Resume Length'
+            };
+
+            form.addEventListener('submit', (e) => {
+                const requiredFields = form.querySelectorAll('[required]');
+                const emptyFields = [];
+
+                // Clear previous error highlights
+                form.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+
+                requiredFields.forEach(field => {
+                    const val = field.value.trim();
+                    if (!val) {
+                        emptyFields.push(field);
+                        field.classList.add('field-error');
+                    }
+                });
+
+                if (emptyFields.length > 0) {
+                    e.preventDefault();
+
+                    // Build error message
+                    const names = emptyFields.map(f => fieldLabels[f.id] || f.id).join(', ');
+                    validationErrorText.textContent = `Please fill in: ${names}`;
+                    validationError.hidden = false;
+
+                    // Scroll to first empty field
+                    emptyFields[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    emptyFields[0].focus();
+                } else {
+                    validationError.hidden = true;
+                }
+            });
+
+            // Clear error highlight when user starts typing
+            form.querySelectorAll('input, textarea, select').forEach(field => {
+                field.addEventListener('input', () => {
+                    field.classList.remove('field-error');
+                    // Hide banner if all errors cleared
+                    if (form.querySelectorAll('.field-error').length === 0) {
+                        validationError.hidden = true;
+                    }
+                });
+            });
+
+            // Apply CRI bar fill styles from data attributes
+            const barFill = document.querySelector('.cri-bar-fill');
+            if (barFill) {
+                barFill.style.width = barFill.dataset.width + '%';
+                barFill.style.background = barFill.dataset.color;
+            }
+
+            // Apply CRI ring SVG styles from data attributes
+            const criProgress = document.querySelector('.cri-progress');
+            if (criProgress) {
+                criProgress.setAttribute('stroke', criProgress.dataset.stroke);
+                criProgress.setAttribute('stroke-dasharray', criProgress.dataset.dash + ' 326.73');
+            }
+
+            // Live counter for textareas
+            document.querySelectorAll('textarea').forEach(ta => {
+                const hint = ta.nextElementSibling;
+                if (!hint || !hint.classList.contains('hint')) return;
+                function updateCount() {
+                    const items = ta.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                    const count = items.length;
+                    if (ta.value.trim() === '') {
+                        hint.textContent = 'Type items separated by commas \u2014 we\'ll count them';
+                    } else {
+                        hint.textContent = `${count} item${count !== 1 ? 's' : ''} detected`;
+                    }
+                }
+                ta.addEventListener('input', updateCount);
+                updateCount();
+            });
+
+            // Auto-calculate soft skills score from text (if score field is empty)
+            const softSkillsText = document.getElementById('soft_skills_text');
+            const softSkillsScore = document.getElementById('soft_skills_score');
+            if (softSkillsText && softSkillsScore) {
+                let manuallyEdited = false;
+                softSkillsScore.addEventListener('input', () => {
+                    manuallyEdited = softSkillsScore.value.trim() !== '';
+                });
+                softSkillsText.addEventListener('input', () => {
+                    if (!manuallyEdited) {
+                        const items = softSkillsText.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+                        softSkillsScore.value = Math.min(items.length, 10);
+                    }
+                });
+            }
+
+            // ===== Resume Scanner =====
+            const scannerToggle = document.getElementById('scanner-toggle');
+            const scannerBody = document.getElementById('scanner-body');
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('resume-file');
+            const scannerStatus = document.getElementById('scanner-status');
+            const scannerStatusText = document.getElementById('scanner-status-text');
+            const scannerResult = document.getElementById('scanner-result');
+            const scannerResultText = document.getElementById('scanner-result-text');
+            const scannerError = document.getElementById('scanner-error');
+            const scannerErrorText = document.getElementById('scanner-error-text');
+
+            // Toggle scanner body
+            scannerToggle.addEventListener('click', () => {
+                scannerBody.classList.toggle('open');
+                scannerToggle.classList.toggle('active');
+            });
+
+            // Drag & drop
+            dropZone.addEventListener('click', () => fileInput.click());
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.classList.add('drag-over');
+            });
+
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.classList.remove('drag-over');
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('drag-over');
+                if (e.dataTransfer.files.length > 0) {
+                    uploadAndScan(e.dataTransfer.files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length > 0) {
+                    uploadAndScan(fileInput.files[0]);
+                }
+            });
+
+            function uploadAndScan(file) {
+                // Validate file type
+                const allowed = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+                if (!allowed.includes(file.type)) {
+                    showError('Please upload a JPG, PNG, or PDF file.');
+                    return;
+                }
+
+                // Show loading
+                scannerStatus.hidden = false;
+                scannerResult.hidden = true;
+                scannerError.hidden = true;
+                scannerStatusText.textContent = `Scanning "${file.name}"...`;
+
+                const formData = new FormData();
+                formData.append('resume', file);
+
+                fetch('/scan', { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        scannerStatus.hidden = true;
+                        if (data.success) {
+                            fillFormFromScan(data.fields);
+                            scannerResult.hidden = false;
+                            const count = Object.keys(data.fields).filter(k => data.fields[k]).length;
+                            scannerResultText.textContent = `${count} fields auto-filled from resume!`;
+                        } else {
+                            showError(data.error || 'Could not extract data from resume.');
+                        }
+                    })
+                    .catch(err => {
+                        scannerStatus.hidden = true;
+                        showError('Network error. Please try again.');
+                    });
+            }
+
+            function showError(msg) {
+                scannerError.hidden = false;
+                scannerResult.hidden = true;
+                scannerStatus.hidden = true;
+                scannerErrorText.textContent = msg;
+            }
+
+            function fillFormFromScan(fields) {
+                const fieldMap = {
+                    age: 'age',
+                    cgpa: 'cgpa',
+                    education_level: 'education_level',
+                    university_tier: 'university_tier',
+                    internships: 'internships',
+                    experience_years: 'experience_years',
+                    research_papers: 'research_papers',
+                    skills_score: 'skills_score',
+                    soft_skills_score: 'soft_skills_score',
+                    resume_length_words: 'resume_length_words',
+                    company_type: 'company_type',
+                    programming_languages_text: 'programming_languages_text',
+                    certifications_text: 'certifications_text',
+                    projects_text: 'projects_text',
+                    hackathons_text: 'hackathons_text',
+                    soft_skills_text: 'soft_skills_text'
+                };
+
+                for (const [key, id] of Object.entries(fieldMap)) {
+                    if (fields[key] !== undefined && fields[key] !== null && fields[key] !== '') {
+                        const el = document.getElementById(id);
+                        if (!el) continue;
+                        if (el.tagName === 'SELECT') {
+                            // Try to match option value
+                            for (const opt of el.options) {
+                                if (opt.value === String(fields[key])) {
+                                    el.value = fields[key];
+                                    break;
+                                }
+                            }
+                        } else {
+                            el.value = fields[key];
+                        }
+                        // Trigger input event for live counters
+                        el.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

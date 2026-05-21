@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Cases — Resume Screener</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f0f0ff;
+            min-height: 100vh;
+            padding: 40px 20px 60px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1e1b4b;
+            margin-bottom: 8px;
+        }
+        .page-header p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .page-header a {
+            display: inline-block;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .page-header a:hover { text-decoration: underline; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 18px;
+            border: 1.5px solid rgba(99,102,241,0.12);
+            padding: 28px 24px;
+            box-shadow: 0 8px 32px rgba(99,102,241,0.08);
+            animation: cardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .card:nth-child(1) { animation-delay: 0s; }
+        .card:nth-child(2) { animation-delay: 0.08s; }
+        .card:nth-child(3) { animation-delay: 0.16s; }
+        .card:nth-child(4) { animation-delay: 0.24s; }
+        .card:nth-child(5) { animation-delay: 0.32s; }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .card-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e1b4b;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(99,102,241,0.1);
+        }
+
+        /* ---- Result banner inside card ---- */
+        .card-result {
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-align: center;
+            margin-bottom: 18px;
+            border: 1.5px solid;
+        }
+
+        .card-result-text {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .card-result-tip {
+            font-size: 12.5px;
+            font-weight: 500;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        .card-result-conf {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 8px;
+        }
+
+        /* ---- CRI mini ---- */
+        .card-cri {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 0 0;
+        }
+
+        .mini-ring {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            flex-shrink: 0;
+        }
+        .mini-ring svg { width: 100%; height: 100%; }
+        .mini-ring-num {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .card-cri-info {
+            flex: 1;
+        }
+        .card-cri-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 6px;
+        }
+
+        .cri-bar-track {
+            height: 7px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .cri-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .cri-bar-val {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        /* Model row */
+        .model-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12.5px;
+            color: #6b7280;
+            margin-bottom: 14px;
+            padding: 8px 12px;
+            background: #f5f3ff;
+            border-radius: 8px;
+        }
+        .model-row strong {
+            color: #1e1b4b;
+        }
+
+        @media (max-width: 640px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-header">
+        <h1>🧪 Test Cases — Dynamic CRI Results</h1>
+        <p>5 test profiles: Worst → Below Average → Average → Strong → Best</p>
+        <a href="/">← Back to Resume Screener</a>
+    </div>
+
+    <div class="grid">
+        {% for r in results %}
+        <div class="card">
+            <div class="card-name">{{ r.name }}</div>
+
+            <!-- Model raw prediction -->
+            <div class="model-row">
+                <span>Raw Model Prediction:</span>
+                <strong>{{ r.model_pred }}</strong>
+            </div>
+
+            <!-- Dynamic result banner -->
+            <div class="card-result"
+                 style="border-color: {{ r.cri_color }}40; background: {{ r.cri_color }}0d;">
+                <div class="card-result-text" style="color: {{ r.cri_color }};">{{ r.result_text }}</div>
+                <div class="card-result-tip" style="color: {{ r.cri_color }};">{{ r.result_tip }}</div>
+                {% if r.confidence %}
+                <div class="card-result-conf">Confidence: {{ r.confidence }}%</div>
+                {% endif %}
+            </div>
+
+            <!-- CRI mini ring -->
+            <div class="card-cri">
+                <div class="mini-ring">
+                    <svg viewBox="0 0 120 120">
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="#e5e7eb" stroke-width="10"/>
+                        <circle cx="60" cy="60" r="52" fill="none"
+                                stroke="{{ r.cri_color }}" stroke-width="10"
+                                stroke-linecap="round"
+                                transform="rotate(-90 60 60)"
+                                stroke-dasharray="{{ (r.cri_score / 100) * 326.73 }} 326.73"/>
+                    </svg>
+                    <span class="mini-ring-num" style="color: {{ r.cri_color }};">{{ r.cri_score }}</span>
+                </div>
+                <div class="card-cri-info">
+                    <div class="card-cri-label" style="color: {{ r.cri_color }};">CRI: {{ r.cri_label }}</div>
+                    <div class="cri-bar-track">
+                        <div class="cri-bar-fill" style="width: {{ r.cri_score }}%; background: {{ r.cri_color }};"></div>
+                    </div>
+                    <div class="cri-bar-val">{{ r.cri_score }} / 100</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</body>
+</html>
